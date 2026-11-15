@@ -1,0 +1,1817 @@
+﻿<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ankligan — operation picknick</title>
+
+  <!--
+    VÄLKOMMEN TILL KODEN!
+
+    Filen innehåller tre delar:
+    1. CSS, mellan <style> och </style>: färger, storlekar och placering.
+    2. HTML, mellan <body> och <script>: sidans texter och knappar.
+    3. JavaScript, längst ner: rörelse, spelregler och teckningar.
+
+    Börja med att söka efter BÖRJA HÄR med Ctrl+F.
+    Du behöver inte förstå alla delar för att ändra en hastighet!
+  -->
+
+  <style>
+    /* DEL 1: UTSEENDE (CSS)
+       En regel som body { background: ...; } väljer en del av sidan
+       och bestämmer hur den ska se ut. #101f1c är en färgkod. */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #101f1c;
+      color: #f7f3df;
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      max-width: 1060px;
+      margin: auto;
+      padding: 26px 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .overrubrik {
+      color: #b7ce9b;
+      font-size: 11px;
+      letter-spacing: 3px;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: 42px;
+      letter-spacing: -2px;
+      margin: 3px 0;
+    }
+
+    h1 span {
+      color: #ffcf60;
+    }
+
+    .underrubrik {
+      margin: 0;
+      color: #b4c5b9;
+      font-size: 14px;
+    }
+
+    .marke {
+      border: 1px solid #4a6051;
+      padding: 9px 13px;
+      border-radius: 30px;
+      font-size: 12px;
+      color: #c6d4be;
+    }
+
+    .informationsrad {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .informationsruta {
+      background: #21372d;
+      padding: 12px 18px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .informationsruta small {
+      color: #b4c5b9;
+      font-size: 12px;
+    }
+
+    .informationsruta strong {
+      font-size: 20px;
+    }
+
+    .spelomrade {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #647b51;
+      background: #8ba96a;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 960 / 580;
+      touch-action: none;
+    }
+
+    .uppdragsskylt, .kameraskylt {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      text-align: center;
+      border-radius: 20px;
+      padding: 8px 16px;
+      background: #18382be8;
+      color: #fff2ce;
+      font-size: 12px;
+      width: max-content;
+      max-width: 90%;
+    }
+
+    .uppdragsskylt {
+      top: 12px;
+    }
+
+    .kameraskylt {
+      bottom: 12px;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    /* Siktet ligger ovanpå 3D-bilden och fångar inga musklick. */
+    .sikte {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff5d5;
+      text-shadow: 0 1px 4px #102f23;
+      font-size: 23px;
+      pointer-events: none;
+    }
+
+    .buskfilter {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 75px 25px #254f3688;
+      pointer-events: none;
+    }
+
+    #dragknapp, #omstartknapp {
+      margin-top: 10px;
+      background: #d7e4be;
+      font-size: 12px;
+    }
+
+    #dragknapp[hidden], #omstartknapp[hidden] {
+      display: none;
+    }
+
+    .menybakgrund {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #10281b88;
+      padding: 16px;
+    }
+
+    .menybakgrund[hidden] {
+      display: none;
+    }
+
+    .menykort {
+      width: min(400px, 100%);
+      text-align: center;
+      padding: 25px;
+      border-radius: 20px;
+      background: #fcf6df;
+      color: #203c2e;
+      box-shadow: 0 15px 70px #14261d66;
+    }
+
+    .ankbild {
+      font-size: 54px;
+    }
+
+    h2 {
+      margin: 6px 0 12px;
+      font-size: 30px;
+      letter-spacing: -1px;
+    }
+
+    .menykort p {
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 10px 0 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      background: #f4bd45;
+      padding: 12px 22px;
+      color: #233b2c;
+      font: 800 15px system-ui;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ffd979;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+    }
+
+    .kontroller {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 25px;
+      margin: 15px 0;
+      color: #c8d2bf;
+      font-size: 13px;
+    }
+
+    kbd {
+      display: inline-block;
+      background: #2e4438;
+      border: 1px solid #536347;
+      border-radius: 5px;
+      padding: 2px 6px;
+      font: 12px system-ui;
+      color: #fff2ce;
+    }
+
+    .forklaring {
+      margin-top: 22px;
+      border-top: 1px solid #344c3d;
+      padding-top: 18px;
+      color: #b8c9b8;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .forklaring h3 {
+      color: #eedfae;
+      margin: 0 0 8px;
+    }
+
+    .forklaring code {
+      color: #ffcf60;
+    }
+
+    .mobilknappar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .mobilknappar button {
+      padding: 10px 16px;
+      background: #304b3a;
+      color: #f3eacb;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .riktningsknappar {
+      display: flex;
+      gap: 5px;
+    }
+
+    /* På en dator med mus behövs inte mobilknapparna. */
+    @media (min-width: 800px) and (pointer: fine) {
+      .mobilknappar {
+        display: none;
+      }
+    }
+
+    /* Smal skärm: använd mindre text och mindre mellanrum. */
+    @media (max-width: 600px) {
+      main {
+        padding: 16px 10px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      header {
+        flex-wrap: wrap;
+      }
+
+      .marke {
+        font-size: 11px;
+      }
+
+      .informationsruta {
+        padding: 10px;
+      }
+
+      .informationsruta small {
+        font-size: 10px;
+      }
+
+      .informationsruta strong {
+        font-size: 16px;
+      }
+
+      .menykort {
+        padding: 14px;
+      }
+
+      .menykort p {
+        margin: 8px 0 12px;
+      }
+
+      .ankbild {
+        font-size: 30px;
+      }
+
+      h2 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- DEL 2: SIDANS INNEHÅLL (HTML)
+       <h1> är en stor rubrik. <p> är ett textstycke.
+       id ger en del ett unikt namn, så JavaScript kan hitta den. -->
+  <main>
+    <header>
+      <div>
+        <div class="overrubrik">EN MYCKET OANSVARIG PARKUTFLYKT</div>
+        <h1>ANK<span>LIGAN</span> 🦆</h1>
+        <p class="underrubrik">Operation picknick · se världen genom ankans ögon</p>
+      </div>
+      <div class="marke" id="kartnamn" aria-live="polite">SLUMPAR KARTA…</div>
+    </header>
+
+    <div class="informationsrad" aria-live="polite">
+      <div class="informationsruta">
+        <small>STULET BYTE</small>
+        <strong id="poangtext">0 / 8</strong>
+      </div>
+      <div class="informationsruta">
+        <small>TID KVAR</small>
+        <strong id="tidtext"></strong>
+      </div>
+      <div class="informationsruta">
+        <small>PARKVAKTEN</small>
+        <strong id="vakttext">På rast</strong>
+      </div>
+    </div>
+
+    <div class="spelomrade">
+      <!-- WebGL ritar parken och figurerna i tre dimensioner på vår canvas. -->
+      <canvas id="spelplan" width="960" height="580" tabindex="0"
+        aria-label="Förstapersonsspel: musen vänder ankan. WASD eller pilarna går framåt, bakåt och i sidled. Esc pausar.">
+      </canvas>
+
+      <div class="uppdragsskylt" id="uppdragsskylt">Samla maten och återvänd till den blå dammen.</div>
+      <div class="kameraskylt" id="kameraskylt">MUS = TITTA · WASD = GÅ · ESC = PAUS</div>
+      <div class="sikte" aria-hidden="true">+</div>
+      <div class="buskfilter" id="buskfilter" hidden></div>
+      <div class="menybakgrund" id="meny">
+        <div class="menykort">
+          <div class="ankbild">🦆</div>
+          <h2 id="menyrubrik">Stor aptit. Liten anka.</h2>
+          <p id="menytext"></p>
+          <button id="startknapp">Bli ankan →</button>
+          <button id="dragknapp" hidden>Spela med dragstyrning</button>
+          <button id="omstartknapp" hidden>Ny slumpad karta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobilknappar">
+      <div class="riktningsknappar">
+        <button data-tangent="arrowleft" aria-label="Vänster">←</button>
+        <button data-tangent="arrowup" aria-label="Upp">↑</button>
+        <button data-tangent="arrowdown" aria-label="Ner">↓</button>
+        <button data-tangent="arrowright" aria-label="Höger">→</button>
+      </div>
+      <button id="kvackknapp">KVACK!</button>
+    </div>
+
+    <div class="kontroller">
+      <span><kbd>W / ↑</kbd> framåt · <kbd>S / ↓</kbd> bakåt · <kbd>A D / ← →</kbd> sidled</span>
+      <span><kbd>Mellanslag</kbd> kvacka och locka vakten</span>
+      <span>Mus: titta och vänd · <kbd>Esc</kbd> / <kbd>P</kbd> pausa</span>
+      <span>🌿 Buske = gömställe · 💧 Damm = mål</span>
+    </div>
+
+    <div class="forklaring">
+      <h3>Så fungerar 3D-versionen</h3>
+      <p>
+        Ankan, vakten och buskarna är byggda av enkla klossar.
+        Varje kloss har en <b>bredd</b>, ett <b>djup</b> och en <b>höjd</b>.
+        Kameran sitter nu vid ankans ögon. Musen vrider hela ankan.
+        <b>W</b> går framåt dit du tittar, <b>S</b> bakåt och <b>A/D</b> i sidled.
+        Två knappar samtidigt går snett. Klicka på startknappen för att fånga musen;
+        <b>Esc</b> släpper den och pausar.
+        I koden heter byggfunktionen <code>ritaKloss</code>.
+        Läs <b>avsnitt 6 B</b> om musen och <b>avsnitt 8</b> om rörelsen.
+        Där visas hur riktningen och framåtknappen tillsammans flyttar ankan.
+      </p>
+      <h3>Fem olika kartor</h3>
+      <p>
+        Blomsterparken, Palmstranden, Snödalen, Höstlunden och Takträdgården
+        har egna gångvägar, gömställen och matplatser. En karta slumpas när du
+        startar en ny omgång. Paus behåller kartan. Samma karta kommer aldrig
+        två omgångar i rad.
+        I kodens <b>avsnitt 3</b> finns listan <code>kartor</code>.
+        <code>Math.random()</code> hjälper oss att välja en karta ur listan.
+      </p>
+      <h3>Ditt första kodexperiment</h3>
+      <p>
+        Öppna den här filen i redigeraren. Tryck <kbd>Ctrl+F</kbd> och sök efter
+        <code>const vaktensJaktfart</code>. Öka talet efter likhetstecknet
+        så jagar vakten snabbare. Minska det för att göra spelet lättare.
+        Spara med <kbd>Ctrl+S</kbd> och ladda om spelet i webbläsaren.
+      </p>
+      <p>
+        <b>Så läser du raden:</b> <code>const</code> skapar ett namn för ett värde.
+        <code>vaktensJaktfart</code> är namnet. <code>= 250</code> ger det värdet 250.
+        Semikolonet <code>;</code> avslutar instruktionen.
+        Text efter <code>//</code> är en förklaring som datorn hoppar över.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+
+    // DEL 3: SPELETS BETEENDE (JAVASCRIPT)
+    //
+    // Liten ordlista:
+    // const = ett namn som vi inte ska ge ett nytt värde senare.
+    // let = ett namn vars värde kan ändras, till exempel tiden som är kvar.
+    // function = flera instruktioner som vi samlar under ett namn.
+    // if = "om detta stämmer, gör det som står mellan { och }".
+    // for...of = "gör detta för varje sak i en lista".
+    //
+    // Namn som document, addEventListener och requestAnimationFrame
+    // kommer från webbläsaren. Våra egna namn är på svenska.
+
+    // ============================================================
+    // 1. BÖRJA HÄR: ÄNDRA SPELETS INSTÄLLNINGAR
+    // ============================================================
+    // Byt bara talet på den rad du vill prova. Behåll resten av raden.
+    // Spara filen och ladda om webbläsaren för att se ändringen.
+
+    // Hur många sekunder du har på dig.
+    const speltid = 75;
+
+    // Ankans fart. Högre tal betyder snabbare anka.
+    const ankansFart = 190;
+
+    // Vaktens fart när han går sin vanliga runda.
+    const vaktensPromenadfart = 200;
+
+    // Vaktens fart när han jagar dig. Högre tal betyder snabbare jakt!
+    const vaktensJaktfart = 250;
+
+    // Hur långt vakten ser, mätt i bildpunkter på spelplanen.
+    const vaktensSynavstand = 210;
+
+    // Hur många sekunder du måste vänta mellan två kvack.
+    const vantetidMellanKvack = 3;
+
+    // MUS OCH KAMERA: mindre muskanslighet gör att du vänder långsammare.
+    const muskanslighet = 0.0025;
+
+    // Ögonens höjd över marken. En anka ser världen ganska långt nerifrån!
+    const ogonhojd = 42;
+
+    // Synfält i grader. Ett högre tal visar mer av parken åt sidorna.
+    const synfalt = 75;
+
+    // ============================================================
+    // 2. HITTA TEXT OCH KNAPPAR PÅ SIDAN
+    // ============================================================
+    // getElementById hittar HTML-delen med det id vi skriver inom citattecken.
+    const spelplan = document.getElementById('spelplan');
+    // WebGL låter grafikkortet rita riktiga 3D-former i webbläsaren.
+    const grafikkort = spelplan.getContext('webgl', { antialias: true, alpha: false });
+    const poangtext = document.getElementById('poangtext');
+    const tidtext = document.getElementById('tidtext');
+    const vakttext = document.getElementById('vakttext');
+    const meny = document.getElementById('meny');
+    const menyrubrik = document.getElementById('menyrubrik');
+    const menytext = document.getElementById('menytext');
+    const startknapp = document.getElementById('startknapp');
+    const kvackknapp = document.getElementById('kvackknapp');
+    const omstartknapp = document.getElementById('omstartknapp');
+
+    // ============================================================
+    // 3. PARKENS PLATSER
+    // ============================================================
+    // x är avståndet från vänster kant. Större x = längre åt höger.
+    // y är avståndet från överkanten. Större y = längre ner.
+    // { x: 100, y: 200 } beskriver EN plats.
+    // [ ... ] är en lista med flera saker.
+
+    // FEM KARTOR: varje karta har egna platser, färger och dekorationer.
+    // Ändra till exempel en matbits x och y för att flytta den på just den kartan.
+    const kartor = [
+      {
+        namn: 'Blomsterparken', miljo: 'sommar',
+        mark: '#99bd72', yttermark: '#82a66e', stig: '#d6c59a', kant: '#e8d9ac',
+        himmel: [0.65, 0.81, 0.85], buskfarger: ['#437d4b', '#59934f', '#6ba255', '#87b765'],
+        damm: {x: 105, y: 465, halvBredd: 84, halvHojd: 64},
+        buskar: [{x: 265, y: 175}, {x: 500, y: 330}, {x: 755, y: 155}, {x: 740, y: 445}],
+        filtar: [{x: 360, y: 110}, {x: 620, y: 225}, {x: 370, y: 440}],
+        runda: [{x: 470, y: 100}, {x: 835, y: 290}, {x: 580, y: 490}, {x: 260, y: 310}],
+        mat: [{x: 330, y: 95}, {x: 390, y: 125}, {x: 595, y: 205}, {x: 650, y: 245},
+              {x: 345, y: 420}, {x: 400, y: 460}, {x: 840, y: 90}, {x: 860, y: 490}]
+      },
+      {
+        namn: 'Palmstranden', miljo: 'strand',
+        mark: '#edcf8f', yttermark: '#d7bb80', stig: '#c39964', kant: '#a98158',
+        himmel: [0.49, 0.80, 0.94], buskfarger: ['#37836a', '#4e9b69', '#69ac78', '#95c97c'],
+        damm: {x: 100, y: 290, halvBredd: 72, halvHojd: 104},
+        buskar: [{x: 285, y: 115}, {x: 480, y: 410}, {x: 695, y: 170}, {x: 800, y: 430}],
+        filtar: [{x: 360, y: 240}, {x: 630, y: 420}, {x: 810, y: 105}],
+        runda: [{x: 850, y: 280}, {x: 620, y: 90}, {x: 350, y: 420}, {x: 760, y: 490}],
+        mat: [{x: 335, y: 225}, {x: 385, y: 255}, {x: 605, y: 405}, {x: 655, y: 435},
+              {x: 785, y: 90}, {x: 835, y: 120}, {x: 460, y: 80}, {x: 880, y: 510}]
+      },
+      {
+        namn: 'Snödalen', miljo: 'vinter',
+        mark: '#e4edf2', yttermark: '#d2e2ed', stig: '#b4cddd', kant: '#8ba6b8',
+        himmel: [0.69, 0.76, 0.87], buskfarger: ['#578f95', '#75a3a9', '#8ab1b6', '#ffffff'],
+        damm: {x: 845, y: 100, halvBredd: 82, halvHojd: 65},
+        buskar: [{x: 650, y: 230}, {x: 395, y: 125}, {x: 240, y: 370}, {x: 670, y: 465}],
+        filtar: [{x: 150, y: 115}, {x: 450, y: 325}, {x: 805, y: 470}],
+        runda: [{x: 170, y: 450}, {x: 170, y: 120}, {x: 480, y: 300}, {x: 800, y: 440}],
+        mat: [{x: 125, y: 100}, {x: 175, y: 130}, {x: 425, y: 310}, {x: 475, y: 340},
+              {x: 780, y: 455}, {x: 830, y: 485}, {x: 95, y: 480}, {x: 540, y: 90}]
+      },
+      {
+        namn: 'Höstlunden', miljo: 'host',
+        mark: '#bd9854', yttermark: '#9d7b45', stig: '#ead4a5', kant: '#79523d',
+        himmel: [0.94, 0.72, 0.53], buskfarger: ['#b85937', '#cc793d', '#dc9b45', '#f5c65c'],
+        damm: {x: 850, y: 470, halvBredd: 80, halvHojd: 65},
+        buskar: [{x: 700, y: 330}, {x: 490, y: 120}, {x: 220, y: 230}, {x: 450, y: 440}],
+        filtar: [{x: 155, y: 110}, {x: 565, y: 280}, {x: 200, y: 460}],
+        runda: [{x: 150, y: 310}, {x: 360, y: 90}, {x: 800, y: 150}, {x: 500, y: 390}],
+        mat: [{x: 130, y: 95}, {x: 180, y: 125}, {x: 540, y: 265}, {x: 590, y: 295},
+              {x: 175, y: 445}, {x: 225, y: 475}, {x: 780, y: 100}, {x: 360, y: 300}]
+      },
+      {
+        namn: 'Takträdgården', miljo: 'tak',
+        mark: '#777f98', yttermark: '#404b68', stig: '#b5b3c6', kant: '#c3cedd',
+        himmel: [0.30, 0.33, 0.53], buskfarger: ['#316f67', '#409381', '#63b5a0', '#8bd7b3'],
+        damm: {x: 480, y: 480, halvBredd: 90, halvHojd: 58},
+        buskar: [{x: 230, y: 390}, {x: 230, y: 165}, {x: 720, y: 160}, {x: 730, y: 390}],
+        filtar: [{x: 115, y: 100}, {x: 485, y: 160}, {x: 840, y: 305}],
+        runda: [{x: 480, y: 70}, {x: 830, y: 160}, {x: 800, y: 440}, {x: 120, y: 320}],
+        mat: [{x: 90, y: 85}, {x: 140, y: 115}, {x: 460, y: 145}, {x: 510, y: 175},
+              {x: 815, y: 290}, {x: 865, y: 320}, {x: 100, y: 470}, {x: 860, y: 490}]
+      }
+    ];
+
+    // Dessa namn pekar på den karta som används just nu.
+    let kartnummer = -1;
+    let aktuellKarta;
+    let damm;
+    let buskar;
+    let picknickfiltar;
+    let vaktensRunda;
+    let matplatser;
+    const kartnamn = document.getElementById('kartnamn');
+
+    function valjKarta(onskatNummer) {
+      if (onskatNummer === undefined) {
+        // Gör en lista med alla kartor utom den förra.
+        const mojligaKartor = [];
+        for (let nummer = 0; nummer < kartor.length; nummer = nummer + 1) {
+          if (nummer !== kartnummer) {
+            mojligaKartor.push(nummer);
+          }
+        }
+        // Math.random ger ett slumptal. Math.floor avrundar nedåt till heltal.
+        const slump = Math.floor(Math.random() * mojligaKartor.length);
+        onskatNummer = mojligaKartor[slump];
+      }
+
+      kartnummer = onskatNummer;
+      aktuellKarta = kartor[kartnummer];
+      damm = aktuellKarta.damm;
+      buskar = aktuellKarta.buskar;
+      picknickfiltar = aktuellKarta.filtar;
+      vaktensRunda = aktuellKarta.runda;
+      matplatser = aktuellKarta.mat;
+      kartnamn.textContent = 'KARTA ' + (kartnummer + 1) + '/5 · ' + aktuellKarta.namn;
+    }
+
+    // ============================================================
+    // 4. SAKER SOM ÄNDRAS NÄR VI SPELAR
+    // ============================================================
+    let anka;
+    let vakt;
+    let matbitar = [];
+    let tidKvar = speltid;
+    let antalMatbitar = 0;
+    let spellage = 'start';
+    let kvackVantetid = 0;
+    let kvackRingar = [];
+    let poangEffekter = [];
+    let forraBildensTid = 0;
+
+    // Ankan vrids i sidled med anka.vinkel. Blickens lutning är upp/ner.
+    let blickensLutning = -0.10;
+    let muslage = 'last';
+    let drarBlicken = false;
+    let senasteMusX = 0;
+    let senasteMusY = 0;
+    let begarMuslas = false;
+    const dragknapp = document.getElementById('dragknapp');
+    const kameraskylt = document.getElementById('kameraskylt');
+    const buskfilter = document.getElementById('buskfilter');
+
+    // Här minns vi vilka tangenter spelaren håller nere.
+    // Till exempel betyder tangenter['d'] = true att D hålls nere.
+    const tangenter = {};
+
+    function slappAllaTangenter() {
+      for (const tangent in tangenter) {
+        tangenter[tangent] = false;
+      }
+    }
+
+    // ============================================================
+    // 5. STARTA, PAUSA OCH AVSLUTA
+    // ============================================================
+    function aterstallSpelet(onskatKartnummer) {
+      valjKarta(onskatKartnummer);
+      anka = {
+        x: damm.x,
+        y: damm.y,
+        riktning: 1,
+        vinkel: Math.atan2(290 - damm.y, 480 - damm.x)
+      };
+
+      vakt = {
+        x: vaktensRunda[0].x,
+        y: vaktensRunda[0].y,
+        nastaPlats: 1,
+        vinkel: 0,
+        jaktTidKvar: 0,
+        mal: null
+      };
+
+      matbitar = [];
+      const matbilder = ['🥪', '🍎', '🧀', '🥐'];
+      let bildnummer = 0;
+
+      for (const plats of matplatser) {
+        matbitar.push({
+          x: plats.x,
+          y: plats.y,
+          tagen: false,
+          bild: matbilder[bildnummer]
+        });
+
+        bildnummer = bildnummer + 1;
+        if (bildnummer === matbilder.length) {
+          bildnummer = 0;
+        }
+      }
+
+      blickensLutning = -0.10;
+      animationstid = 0;
+      tidKvar = speltid;
+      antalMatbitar = 0;
+      kvackVantetid = 0;
+      kvackRingar = [];
+      poangEffekter = [];
+      slappAllaTangenter();
+      byggOmKartansGrafik();
+    }
+
+    function startaSpelet() {
+      aterstallSpelet();
+      omstartknapp.hidden = true;
+      spellage = 'spelar';
+      meny.hidden = true;
+      spelplan.focus();
+      uppdateraInformation();
+    }
+
+    function slappMusen() {
+      drarBlicken = false;
+      begarMuslas = false;
+      if (document.pointerLockElement === spelplan) {
+        document.exitPointerLock();
+      }
+    }
+
+    function fortsattSpelet() {
+      spellage = 'spelar';
+      meny.hidden = true;
+      spelplan.focus();
+      aktiveraMusstyrning();
+    }
+
+    function pausaSpelet() {
+      if (spellage === 'spelar') {
+        // Ändra läge INNAN musen släpps, så att samma paus inte körs igen.
+        spellage = 'paus';
+        slappAllaTangenter();
+        slappMusen();
+        meny.hidden = false;
+        omstartknapp.hidden = false;
+        menyrubrik.textContent = 'Ankpaus';
+        menytext.textContent = 'Klicka på Fortsätt för att styra ankan igen.';
+        startknapp.textContent = 'Fortsätt →';
+      } else if (spellage === 'paus') {
+        fortsattSpelet();
+      }
+    }
+
+    function avslutaSpelet(vann, forklaring) {
+      spellage = 'slut';
+      slappAllaTangenter();
+      slappMusen();
+      meny.hidden = false;
+      menytext.textContent = forklaring;
+      startknapp.textContent = 'Spela igen →';
+
+      if (vann) {
+        menyrubrik.textContent = 'Kuppen är fullbordad!';
+      } else {
+        menyrubrik.textContent = 'Kuppen gick åt skogen!';
+      }
+    }
+
+    function klickaPaStart() {
+      if (spellage === 'paus') {
+        fortsattSpelet();
+      } else {
+        startaSpelet();
+        aktiveraMusstyrning();
+      }
+    }
+
+    startknapp.addEventListener('click', klickaPaStart);
+    omstartknapp.addEventListener('click', function () {
+      startaSpelet();
+      aktiveraMusstyrning();
+    });
+
+    // ============================================================
+    // 6. LYSSNA PÅ TANGENTBORDET OCH MOBILKNAPPARNA
+    // ============================================================
+    // addEventListener betyder ungefär "när detta händer, kör funktionen".
+    function tryckNerTangent(handelse) {
+      const tangent = handelse.key.toLowerCase();
+      const spelTangenter = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '];
+
+      if (spelTangenter.includes(tangent)) {
+        // Piltangenterna ska styra spelet i stället för att rulla sidan.
+        handelse.preventDefault();
+      }
+
+      tangenter[tangent] = true;
+
+      if (tangent === 'escape' && spellage === 'spelar') {
+        pausaSpelet();
+        return;
+      }
+
+      if (tangent === 'p' && !handelse.repeat) {
+        pausaSpelet();
+      }
+
+      if (tangent === ' ' && !handelse.repeat) {
+        kvacka();
+      }
+    }
+
+    function slappTangent(handelse) {
+      const tangent = handelse.key.toLowerCase();
+      tangenter[tangent] = false;
+    }
+
+    window.addEventListener('keydown', tryckNerTangent);
+    window.addEventListener('keyup', slappTangent);
+
+    // Pausa automatiskt om spelaren byter flik eller fönster.
+    function pausaOmSpeletPagar() {
+      slappAllaTangenter();
+      if (spellage === 'spelar') {
+        pausaSpelet();
+      }
+    }
+
+    window.addEventListener('blur', pausaOmSpeletPagar);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        pausaOmSpeletPagar();
+      }
+    });
+
+    // Mobilknapparna fungerar som att hålla nere en tangent.
+    const mobilknappar = document.querySelectorAll('[data-tangent]');
+
+    for (const knapp of mobilknappar) {
+      knapp.addEventListener('pointerdown', function (handelse) {
+        handelse.preventDefault();
+        knapp.setPointerCapture(handelse.pointerId);
+        tangenter[knapp.dataset.tangent] = true;
+      });
+
+      function slappMobilknapp() {
+        tangenter[knapp.dataset.tangent] = false;
+      }
+
+      knapp.addEventListener('pointerup', slappMobilknapp);
+      knapp.addEventListener('pointercancel', slappMobilknapp);
+      knapp.addEventListener('lostpointercapture', slappMobilknapp);
+    }
+
+    kvackknapp.addEventListener('click', kvacka);
+
+    // ============================================================
+    // ============================================================
+    // 6 B. MUSEN VÄNDER ANKAN OCH BLICKEN
+    // ============================================================
+    // Pointer Lock är webbläsarens sätt att fånga musen i ett spel.
+    // Då kan du fortsätta vända utan att muspekaren träffar skärmens kant.
+    // Det får bara startas efter ett riktigt klick eller en tangenttryckning.
+    function aktiveraMusstyrning() {
+      // Pekskärmar kan i stället dra ett finger över själva spelbilden.
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        muslage = 'dra';
+      }
+      if (muslage === 'dra') {
+        kameraskylt.textContent = 'DRA I BILDEN = TITTA · WASD = GÅ · ESC = PAUS';
+        return;
+      }
+      if (document.pointerLockElement === spelplan || begarMuslas) {
+        return;
+      }
+
+      begarMuslas = true;
+      try {
+        const begaran = spelplan.requestPointerLock();
+        // Nya webbläsare ger ett Promise, som berättar om begäran misslyckas.
+        if (begaran && typeof begaran.catch === 'function') {
+          begaran.catch(visaMusproblem);
+        }
+      } catch (fel) {
+        visaMusproblem();
+      }
+    }
+
+    function visaMusproblem() {
+      begarMuslas = false;
+      if (spellage !== 'spelar') {
+        return;
+      }
+      pausaSpelet();
+      menyrubrik.textContent = 'Välj musstyrning';
+      menytext.textContent = 'Webbläsaren kunde inte fånga musen. Prova igen, eller välj dragstyrning: håll musknappen nere i spelbilden och dra för att titta.';
+      startknapp.textContent = 'Prova musstyrning igen';
+      dragknapp.hidden = false;
+    }
+
+    document.addEventListener('pointerlockchange', function () {
+      begarMuslas = false;
+      if (document.pointerLockElement === spelplan) {
+        if (spellage !== 'spelar') {
+          document.exitPointerLock();
+          return;
+        }
+        muslage = 'last';
+        dragknapp.hidden = true;
+        kameraskylt.textContent = 'MUS = TITTA · WASD = GÅ · ESC = PAUS';
+      } else if (spellage === 'spelar' && muslage === 'last') {
+        // Detta händer bland annat när spelaren trycker Esc.
+        pausaSpelet();
+      }
+    });
+
+    document.addEventListener('pointerlockerror', visaMusproblem);
+
+    function vridBlicken(stegX, stegY) {
+      // Samma vinkel används av kameran, kroppen OCH framåtknappen.
+      anka.vinkel = anka.vinkel + stegX * muskanslighet;
+      // Håll vinkeln inom ett varv även efter många varv med musen.
+      anka.vinkel = Math.atan2(Math.sin(anka.vinkel), Math.cos(anka.vinkel));
+      blickensLutning = blickensLutning - stegY * muskanslighet;
+      // Stoppa före rakt upp/rakt ner, så att bilden aldrig slår runt.
+      blickensLutning = Math.max(-1.2, Math.min(1.2, blickensLutning));
+    }
+
+    document.addEventListener('mousemove', function (handelse) {
+      if (spellage === 'spelar' && document.pointerLockElement === spelplan) {
+        vridBlicken(handelse.movementX, handelse.movementY);
+      }
+    });
+
+    spelplan.addEventListener('click', function () {
+      if (spellage === 'spelar' && muslage === 'last') {
+        aktiveraMusstyrning();
+      }
+    });
+
+    dragknapp.addEventListener('click', function () {
+      muslage = 'dra';
+      if (spellage === 'paus') {
+        fortsattSpelet();
+      } else {
+        startaSpelet();
+        aktiveraMusstyrning();
+      }
+    });
+
+    // Reservstyrning för pekskärmar och webbläsare utan Pointer Lock.
+    spelplan.addEventListener('pointerdown', function (handelse) {
+      if (spellage !== 'spelar' || muslage !== 'dra') {
+        return;
+      }
+      handelse.preventDefault();
+      drarBlicken = true;
+      senasteMusX = handelse.clientX;
+      senasteMusY = handelse.clientY;
+      spelplan.setPointerCapture(handelse.pointerId);
+    });
+
+    spelplan.addEventListener('pointermove', function (handelse) {
+      if (spellage !== 'spelar' || muslage !== 'dra' || !drarBlicken) {
+        return;
+      }
+      vridBlicken(handelse.clientX - senasteMusX, handelse.clientY - senasteMusY);
+      senasteMusX = handelse.clientX;
+      senasteMusY = handelse.clientY;
+    });
+
+    function slutaDraBlicken() {
+      drarBlicken = false;
+    }
+    spelplan.addEventListener('pointerup', slutaDraBlicken);
+    spelplan.addEventListener('pointercancel', slutaDraBlicken);
+    spelplan.addEventListener('lostpointercapture', slutaDraBlicken);
+
+    // 7. SMÅ HJÄLPFUNKTIONER
+    // ============================================================
+    function avstand(sak1, sak2) {
+      const skillnadX = sak1.x - sak2.x;
+      const skillnadY = sak1.y - sak2.y;
+
+      // Math.hypot räknar ut avståndet mellan två platser.
+      return Math.hypot(skillnadX, skillnadY);
+    }
+
+    function ankanArGomd() {
+      for (const buske of buskar) {
+        if (avstand(anka, buske) < 36) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function ankanArIDammen() {
+      // Dammen är oval. Vi jämför därför x och y med varsin halvstorlek.
+      const platsX = (anka.x - damm.x) / damm.halvBredd;
+      const platsY = (anka.y - damm.y) / damm.halvHojd;
+      return Math.hypot(platsX, platsY) < 1;
+    }
+
+    function kvacka() {
+      if (spellage !== 'spelar') {
+        return;
+      }
+
+      if (kvackVantetid > 0) {
+        return;
+      }
+
+      kvackVantetid = vantetidMellanKvack;
+      vakt.jaktTidKvar = 3;
+      vakt.mal = { x: anka.x, y: anka.y };
+      kvackRingar.push({ x: anka.x, y: anka.y, alder: 0 });
+    }
+
+    // ============================================================
+    // 8. FLYTTA ANKAN
+    // ============================================================
+    // sekunder är tiden sedan förra bilden, ofta ungefär 0,017 sekunder.
+    // fart * sekunder ger lagom förflyttning för just den bilden.
+    // * betyder multiplikation (gånger).
+    function flyttaAnkan(sekunder) {
+      let framat = 0;
+      let sidled = 0;
+
+      if (tangenter['w'] || tangenter['arrowup']) {
+        framat = framat + 1;
+      }
+      if (tangenter['s'] || tangenter['arrowdown']) {
+        framat = framat - 1;
+      }
+      if (tangenter['d'] || tangenter['arrowright']) {
+        sidled = sidled + 1;
+      }
+      if (tangenter['a'] || tangenter['arrowleft']) {
+        sidled = sidled - 1;
+      }
+
+      // Två knappar samtidigt ger diagonal gång med samma hastighet.
+      if (framat !== 0 && sidled !== 0) {
+        framat = framat / Math.sqrt(2);
+        sidled = sidled / Math.sqrt(2);
+      }
+
+      // Musens vinkel berättar vilket håll som just nu är framåt.
+      // cos och sin översätter en vinkel till två riktningar på marken.
+      const framatX = Math.cos(anka.vinkel);
+      const framatY = Math.sin(anka.vinkel);
+      const hogerX = -Math.sin(anka.vinkel);
+      const hogerY = Math.cos(anka.vinkel);
+
+      const stegX = framatX * framat + hogerX * sidled;
+      const stegY = framatY * framat + hogerY * sidled;
+      anka.x = anka.x + stegX * ankansFart * sekunder;
+      anka.y = anka.y + stegY * ankansFart * sekunder;
+
+      // Du går längs marken även om du tittar upp i himlen.
+      // Sidsteg och bakåtgång vrider INTE kroppen: det gör musen.
+      anka.x = Math.max(22, Math.min(spelplan.width - 22, anka.x));
+      anka.y = Math.max(25, Math.min(spelplan.height - 25, anka.y));
+    }
+
+    // ============================================================
+    // 9. LÅT VAKTEN VÄLJA MÅL OCH GÅ DIT
+    // ============================================================
+    function flyttaVakten(sekunder) {
+      const naraAnkan = avstand(anka, vakt) < vaktensSynavstand;
+      const serAnkan = naraAnkan && !ankanArGomd();
+      // && betyder "och". ! betyder "inte".
+
+      if (serAnkan) {
+        vakt.jaktTidKvar = 2;
+        vakt.mal = { x: anka.x, y: anka.y };
+      } else {
+        vakt.jaktTidKvar = Math.max(0, vakt.jaktTidKvar - sekunder);
+      }
+
+      let mal = vaktensRunda[vakt.nastaPlats];
+      let fart = vaktensPromenadfart;
+
+      if (vakt.jaktTidKvar > 0) {
+        mal = vakt.mal;
+        fart = vaktensJaktfart;
+      }
+
+      const avstandTillMal = avstand(vakt, mal);
+
+      if (avstandTillMal > 4) {
+        // Dela med avståndet för att få riktningen mot målet.
+        const riktningX = (mal.x - vakt.x) / avstandTillMal;
+        const riktningY = (mal.y - vakt.y) / avstandTillMal;
+        const steg = Math.min(avstandTillMal, fart * sekunder);
+        vakt.vinkel = Math.atan2(riktningY, riktningX);
+
+        vakt.x = vakt.x + riktningX * steg;
+        vakt.y = vakt.y + riktningY * steg;
+      } else if (vakt.jaktTidKvar === 0) {
+        vakt.nastaPlats = vakt.nastaPlats + 1;
+
+        // Listans första plats har nummer 0, sedan 1, 2 och 3.
+        if (vakt.nastaPlats === vaktensRunda.length) {
+          vakt.nastaPlats = 0;
+        }
+      }
+    }
+
+    // ============================================================
+    // 10. PLOCKA MAT OCH KONTROLLERA VINST ELLER FÖRLUST
+    // ============================================================
+    function plockaMat() {
+      for (const matbit of matbitar) {
+        if (!matbit.tagen && avstand(anka, matbit) < 28) {
+          matbit.tagen = true;
+          antalMatbitar = antalMatbitar + 1;
+          poangEffekter.push({ x: matbit.x, y: matbit.y, alder: 0 });
+        }
+      }
+    }
+
+    function kontrolleraSlut() {
+      if (!ankanArGomd() && avstand(anka, vakt) < 27) {
+        avslutaSpelet(false, 'Vakten tog dig! Prova att gömma dig i buskarna.');
+      } else if (antalMatbitar === matbitar.length && ankanArIDammen()) {
+        avslutaSpelet(true, 'Alla godsaker i säkerhet! Ankligan firar vid dammen.');
+      } else if (tidKvar === 0) {
+        avslutaSpelet(false, 'Tiden tog slut! Försök ta en kortare väg till maten.');
+      }
+    }
+
+    function uppdateraInformation() {
+      poangtext.textContent = antalMatbitar + ' / ' + matbitar.length;
+      // Math.ceil avrundar uppåt: 12,4 sekunder visas som 13 s.
+      tidtext.textContent = Math.ceil(tidKvar) + ' s';
+      vakttext.style.color = '#d2e9ac';
+
+      if (spellage === 'start') {
+        vakttext.textContent = 'På rast';
+      } else if (ankanArGomd()) {
+        vakttext.textContent = 'Du är gömd';
+      } else if (vakt.jaktTidKvar > 0) {
+        vakttext.textContent = 'På jakt!';
+        vakttext.style.color = '#ffc175';
+      } else {
+        vakttext.textContent = 'Patrullerar';
+      }
+    }
+
+    function uppdateraEffekter(sekunder) {
+      for (const ring of kvackRingar) {
+        ring.alder = ring.alder + sekunder;
+      }
+      for (const effekt of poangEffekter) {
+        effekt.alder = effekt.alder + sekunder;
+      }
+
+      // filter behåller bara sakerna som klarar kontrollen.
+      kvackRingar = kvackRingar.filter(function (ring) {
+        return ring.alder < 1.3;
+      });
+      poangEffekter = poangEffekter.filter(function (effekt) {
+        return effekt.alder < 1;
+      });
+    }
+
+    // Det här är receptet för en liten tidsbit i spelet.
+    function uppdateraSpelet(sekunder) {
+      tidKvar = Math.max(0, tidKvar - sekunder);
+      kvackVantetid = Math.max(0, kvackVantetid - sekunder);
+
+      flyttaAnkan(sekunder);
+      flyttaVakten(sekunder);
+      plockaMat();
+      uppdateraEffekter(sekunder);
+      kontrolleraSlut();
+      uppdateraInformation();
+    }
+
+    // ============================================================
+    // ============================================================
+    // 11. BYGG PARKEN I 3D
+    // ============================================================
+    // Samma spelregler används fortfarande. Nu ger vi figurerna höjd!
+    // x och y är platsen på marken. hojd är avståndet UPP från marken.
+    //
+    // ritaKloss(x, y, hojd, bredd, djup, klossensHojd, farg)
+    // Exempel: ritaKloss(100, 200, 10, 40, 30, 20, '#ffffff');
+    // Det blir en vit kloss vid x=100, y=200, med mitten 10 över marken.
+    // Den är 40 bred, 30 djup och 20 hög.
+
+    let allaHorn = [];
+    let parkensHorn = [];
+    let ritprogram;
+    let hornbuffert;
+    let hornPlats;
+    let fargPlats;
+    let kameraPlats;
+    let blickPlats;
+    let bildformatPlats;
+    let synfaltPlats;
+    let himmelPlats;
+    let animationstid = 0;
+    const uppdragsskylt = document.getElementById('uppdragsskylt');
+
+    // En triangel är den minsta byggstenen som grafikkortet ritar.
+    // Varje hörn sparas som: x, höjd, y, röd, grön, blå.
+    function laggTillTriangel(a, b, c, farg, ljus) {
+      const rod = parseInt(farg.slice(1, 3), 16) / 255 * ljus;
+      const gron = parseInt(farg.slice(3, 5), 16) / 255 * ljus;
+      const bla = parseInt(farg.slice(5, 7), 16) / 255 * ljus;
+
+      for (const horn of [a, b, c]) {
+        allaHorn.push(horn[0], horn[1], horn[2], rod, gron, bla);
+      }
+    }
+
+    function ritaKloss(x, y, hojd, bredd, djup, klossensHojd, farg, vinkel = 0) {
+      const horn = [];
+      const cosinus = Math.cos(vinkel);
+      const sinus = Math.sin(vinkel);
+
+      // Åtta hörn bildar klossen. Vrid dem om figuren ska titta åt ett annat håll.
+      for (const niva of [-1, 1]) {
+        for (const sidaY of [-1, 1]) {
+          for (const sidaX of [-1, 1]) {
+            const lokalX = sidaX * bredd / 2;
+            const lokalY = sidaY * djup / 2;
+            horn.push([
+              x + lokalX * cosinus - lokalY * sinus,
+              hojd + niva * klossensHojd / 2,
+              y + lokalX * sinus + lokalY * cosinus
+            ]);
+          }
+        }
+      }
+
+      // Fyra hörn per sida, två trianglar per sida.
+      // Olika ljus på sidorna gör det lättare att se klossens form.
+      const sidor = [
+        { horn: [4, 5, 7, 6], ljus: 1.00 },
+        { horn: [0, 2, 3, 1], ljus: 0.50 },
+        { horn: [0, 1, 5, 4], ljus: 0.70 },
+        { horn: [2, 6, 7, 3], ljus: 0.84 },
+        { horn: [0, 4, 6, 2], ljus: 0.64 },
+        { horn: [1, 3, 7, 5], ljus: 0.91 }
+      ];
+
+      for (const sida of sidor) {
+        const [a, b, c, d] = sida.horn;
+        laggTillTriangel(horn[a], horn[b], horn[c], farg, sida.ljus);
+        laggTillTriangel(horn[a], horn[c], horn[d], farg, sida.ljus);
+      }
+    }
+
+    // En oval platta används till vatten, skuggor och ringar på marken.
+    function ritaPlatta(x, y, hojd, radieX, radieY, farg) {
+      const antalSidor = 32;
+      for (let nummer = 0; nummer < antalSidor; nummer = nummer + 1) {
+        const vinkel1 = nummer / antalSidor * Math.PI * 2;
+        const vinkel2 = (nummer + 1) / antalSidor * Math.PI * 2;
+        laggTillTriangel(
+          [x, hojd, y],
+          [x + Math.cos(vinkel1) * radieX, hojd, y + Math.sin(vinkel1) * radieY],
+          [x + Math.cos(vinkel2) * radieX, hojd, y + Math.sin(vinkel2) * radieY],
+          farg,
+          1
+        );
+      }
+    }
+
+    function ritaRing(x, y, hojd, radie, farg) {
+      // Små klossar bildar en streckad cirkel.
+      for (let nummer = 0; nummer < 40; nummer = nummer + 1) {
+        const vinkel = nummer / 40 * Math.PI * 2;
+        ritaKloss(
+          x + Math.cos(vinkel) * radie,
+          y + Math.sin(vinkel) * radie,
+          hojd, 9, 3, 1, farg, vinkel + Math.PI / 2
+        );
+      }
+    }
+
+    // Varje karta byggs en gång per ny omgång. Paus behåller samma karta.
+    function byggOmKartansGrafik() {
+      allaHorn = [];
+      byggParken();
+      parkensHorn = allaHorn.slice();
+    }
+
+    function ritaGangvag(x1, y1, x2, y2, bredd) {
+      const langd = Math.hypot(x2 - x1, y2 - y1);
+      const vinkel = Math.atan2(y2 - y1, x2 - x1);
+      ritaKloss((x1 + x2) / 2, (y1 + y2) / 2, 0.7,
+        langd, bredd, 0.5, aktuellKarta.stig, vinkel);
+    }
+
+    function ritaTrad(x, y, farg, gran = false) {
+      ritaKloss(x, y, 20, 20, 20, 120, '#8d7453');
+      if (gran) {
+        // Tre avsmalnande våningar ger en enkel gran med snö på.
+        for (let niva = 0; niva < 3; niva = niva + 1) {
+          const bredd = 110 - niva * 27;
+          const hojd = 60 + niva * 48;
+          ritaKloss(x, y, hojd, bredd, bredd, 38, farg);
+          ritaKloss(x, y, hojd + 22, bredd + 3, bredd + 3, 6, '#f5fbff');
+        }
+      } else {
+        ritaKloss(x, y, 110, 110, 95, 100, farg);
+        ritaKloss(x, y, 177, 75, 70, 45, farg);
+      }
+    }
+
+    function ritaPalm(x, y) {
+      ritaKloss(x, y, 45, 15, 15, 170, '#af8556');
+      // Långa platta blad i en stjärna gör palmens silhuett tydlig.
+      for (let blad = 0; blad < 5; blad = blad + 1) {
+        const vinkel = blad * Math.PI * 2 / 5;
+        ritaKloss(x + Math.cos(vinkel) * 28, y + Math.sin(vinkel) * 28,
+          135, 100, 22, 9, '#47966d', vinkel);
+      }
+    }
+
+    function ritaHus(x, y, hojd, farg) {
+      ritaKloss(x, y, hojd / 2 - 40, 150, 120, hojd, farg);
+      // Lysande fönster sitter på husets fyra sidor.
+      for (let vaning = 10; vaning < hojd - 45; vaning = vaning + 36) {
+        for (const offset of [-45, 0, 45]) {
+          ritaKloss(x + offset, y + 61, vaning, 17, 2, 15, '#ffe2a0');
+          ritaKloss(x + offset, y - 61, vaning, 17, 2, 15, '#b8e5e5');
+          ritaKloss(x + 76, y + offset, vaning, 2, 17, 15, '#b8e5e5');
+          ritaKloss(x - 76, y + offset, vaning, 2, 17, 15, '#ffe2a0');
+        }
+      }
+    }
+
+    function byggParken() {
+      const miljo = aktuellKarta.miljo;
+      ritaKloss(480, 290, -42, 6000, 6000, 4, aktuellKarta.yttermark);
+      ritaKloss(480, 290, -20, 990, 610, 36, aktuellKarta.kant);
+      ritaKloss(480, 290, -2, 970, 590, 4, aktuellKarta.mark);
+
+      // Helt olika gångvägar på de fem kartorna.
+      if (miljo === 'sommar') {
+        ritaGangvag(0, 300, 960, 300, 65);
+        ritaGangvag(585, 0, 585, 580, 52);
+        for (const plats of [{x: -110, y: 130}, {x: 1060, y: 440}, {x: 350, y: -130}, {x: 680, y: 720}]) {
+          ritaTrad(plats.x, plats.y, '#649253');
+        }
+        // Rabatter längs kanten, med blommor i rosa och gult.
+        for (let x = 60; x < 940; x = x + 70) {
+          ritaKloss(x, 35, 6, 45, 24, 12, '#6e9450');
+          ritaKloss(x - 9, 35, 18, 10, 10, 8, '#ee91ab');
+          ritaKloss(x + 9, 35, 16, 10, 10, 8, '#ffe191');
+        }
+      } else if (miljo === 'strand') {
+        // Havet utanför västra kanten, med strandlinje och vågor.
+        ritaKloss(-510, 290, -1, 1000, 2200, 5, '#54bfc9');
+        for (let y = -180; y < 800; y = y + 90) {
+          ritaKloss(-80, y, 3, 100, 5, 1, '#c1f0df');
+        }
+        ritaGangvag(200, 540, 850, 70, 60);
+        // Tvärgående plankor gör gången till en strandpromenad.
+        for (let steg = 0; steg <= 20; steg = steg + 1) {
+          ritaKloss(200 + steg * 32.5, 540 - steg * 23.5, 1.4,
+            3, 60, 1, '#e4bd80', -0.626);
+        }
+        for (const plats of [{x: 300, y: -90}, {x: 1050, y: 100}, {x: 1020, y: 540}, {x: 470, y: 680}]) {
+          ritaPalm(plats.x, plats.y);
+        }
+        for (const filt of picknickfiltar) {
+          ritaKloss(filt.x + 62, filt.y, 40, 4, 4, 80, '#ac7b55');
+          ritaKloss(filt.x + 62, filt.y, 83, 85, 75, 5, '#f29f82');
+          ritaKloss(filt.x + 62, filt.y, 88, 38, 35, 5, '#fff0c6');
+        }
+      } else if (miljo === 'vinter') {
+        ritaGangvag(90, 70, 870, 510, 75);
+        ritaGangvag(100, 480, 800, 100, 75);
+        for (const plats of [{x: -80, y: 100}, {x: -100, y: 450}, {x: 300, y: -100}, {x: 690, y: 690}, {x: 1060, y: 300}]) {
+          ritaTrad(plats.x, plats.y, '#51818a', true);
+        }
+        // Två snögubbar, med hatt, ögon och morotsnäsa.
+        for (const plats of [{x: 65, y: 260}, {x: 885, y: 310}]) {
+          ritaKloss(plats.x, plats.y, 19, 38, 38, 38, '#f8fdff');
+          ritaKloss(plats.x, plats.y, 49, 27, 27, 24, '#ffffff');
+          ritaKloss(plats.x, plats.y, 65, 36, 33, 6, '#3f536e');
+          ritaKloss(plats.x, plats.y, 74, 22, 22, 15, '#3f536e');
+          ritaKloss(plats.x - 6, plats.y + 14, 53, 4, 2, 4, '#34445d');
+          ritaKloss(plats.x + 6, plats.y + 14, 53, 4, 2, 4, '#34445d');
+          ritaKloss(plats.x, plats.y + 18, 47, 5, 11, 5, '#ef9a4d');
+          ritaKloss(plats.x, plats.y, 36, 31, 31, 4, '#d27383');
+        }
+      } else if (miljo === 'host') {
+        // En rektangulär runda runt lundens mitt.
+        ritaGangvag(100, 190, 850, 190, 55);
+        ritaGangvag(850, 190, 850, 390, 55);
+        ritaGangvag(850, 390, 100, 390, 55);
+        ritaGangvag(100, 390, 100, 190, 55);
+        const lovfarger = ['#d77d3e', '#e8ae48', '#ae4e3b'];
+        let nummer = 0;
+        for (const plats of [{x: -100, y: 160}, {x: 250, y: -100}, {x: 650, y: -100}, {x: 1070, y: 150}, {x: 380, y: 690}]) {
+          ritaTrad(plats.x, plats.y, lovfarger[nummer % 3]);
+          nummer = nummer + 1;
+        }
+        // Fallna löv ligger som små färgade plattor på marken.
+        for (let nummer = 0; nummer < 65; nummer = nummer + 1) {
+          const x = 30 + (nummer * 137) % 900;
+          const y = 30 + (nummer * 83) % 520;
+          ritaKloss(x, y, 0.25, 10, 6, 0.2, lovfarger[nummer % 3], nummer);
+        }
+        for (const plats of [{x: 55, y: 80}, {x: 900, y: 230}, {x: 60, y: 480}]) {
+          ritaKloss(plats.x, plats.y, 13, 31, 28, 26, '#de8136');
+          ritaKloss(plats.x, plats.y, 29, 5, 5, 8, '#627847');
+        }
+      } else if (miljo === 'tak') {
+        // Plattor i ett rutnät och stora planteringar längs kanterna.
+        for (let x = 80; x <= 880; x = x + 160) {
+          ritaGangvag(x, 0, x, 580, 35);
+        }
+        ritaGangvag(0, 290, 960, 290, 45);
+        for (const plats of [{x: -200, y: 110}, {x: -200, y: 500}, {x: 1160, y: 120}, {x: 1160, y: 480}, {x: 260, y: -230}, {x: 720, y: -230}, {x: 200, y: 820}, {x: 780, y: 820}]) {
+          const hojd = 180 + ((plats.x + plats.y + 2000) % 4) * 75;
+          ritaHus(plats.x, plats.y, hojd, '#59627e');
+        }
+        for (let x = 80; x <= 880; x = x + 160) {
+          ritaKloss(x, 30, 10, 65, 35, 20, '#414b64');
+          ritaKloss(x, 30, 26, 56, 28, 16, '#65b49c');
+          ritaKloss(x, 552, 14, 18, 18, 28, '#58617c');
+          ritaKloss(x, 552, 31, 20, 20, 5, '#f8d9a6');
+        }
+        // Neonkanter runt taket gör kvällsmiljön lätt att känna igen.
+        ritaKloss(480, -8, 4, 960, 4, 4, '#a9e9dc');
+        ritaKloss(480, 588, 4, 960, 4, 4, '#e4a5ca');
+      }
+
+      // Filtarna är samma typ av mål, men står på helt olika platser.
+      for (const filt of picknickfiltar) {
+        for (let kolumn = 0; kolumn < 6; kolumn = kolumn + 1) {
+          for (let rad = 0; rad < 4; rad = rad + 1) {
+            let farg = '#f9edcd';
+            if ((kolumn + rad) % 2 === 0) {
+              farg = aktuellKarta.miljo === 'tak' ? '#a894cf' : '#d98371';
+            }
+            ritaKloss(filt.x - 45 + kolumn * 18, filt.y - 25 + rad * 17,
+              1.8, 18, 17, 1, farg);
+          }
+        }
+      }
+
+      ritaPlatta(damm.x, damm.y, 1, damm.halvBredd + 9, damm.halvHojd + 9, aktuellKarta.kant);
+      ritaPlatta(damm.x, damm.y, 2, damm.halvBredd, damm.halvHojd, '#5ebbc1');
+      ritaPlatta(damm.x - 10, damm.y - 8, 2.2, damm.halvBredd * 0.65, damm.halvHojd * 0.58, '#89d5ce');
+      // Den blå dammen är alltid målet, även i snö och på taket.
+      ritaKloss(damm.x - 20, damm.y, 2.6, 38, 2, 0.3, '#caf3dc');
+      ritaKloss(damm.x + 20, damm.y + 20, 2.6, 32, 2, 0.3, '#caf3dc');
+
+      // Gränsen är alltid synlig och ligger utanför den spelbara marken.
+      for (let x = 0; x <= 960; x = x + 80) {
+        ritaKloss(x, -12, 15, 8, 8, 30, aktuellKarta.kant);
+        ritaKloss(x, 592, 15, 8, 8, 30, aktuellKarta.kant);
+      }
+      ritaKloss(480, -12, 21, 970, 5, 6, aktuellKarta.kant);
+      ritaKloss(480, 592, 21, 970, 5, 6, aktuellKarta.kant);
+      for (let y = 0; y <= 580; y = y + 80) {
+        ritaKloss(-12, y, 15, 8, 8, 30, aktuellKarta.kant);
+        ritaKloss(972, y, 15, 8, 8, 30, aktuellKarta.kant);
+      }
+      ritaKloss(-12, 290, 21, 5, 580, 6, aktuellKarta.kant);
+      ritaKloss(972, 290, 21, 5, 580, 6, aktuellKarta.kant);
+    }
+
+    function ritaBuskar() {
+      const farger = aktuellKarta.buskfarger;
+      for (const buske of buskar) {
+        if (avstand(anka, buske) < 36) {
+          continue;
+        }
+        if (aktuellKarta.miljo === 'tak') {
+          ritaKloss(buske.x, buske.y, 5, 85, 65, 10, '#414b64');
+        }
+        ritaKloss(buske.x - 21, buske.y + 3, 22, 38, 46, 44, farger[0]);
+        ritaKloss(buske.x + 22, buske.y, 24, 39, 42, 48, farger[1]);
+        ritaKloss(buske.x, buske.y - 7, 34, 43, 43, 68, farger[2]);
+        if (aktuellKarta.miljo === 'vinter') {
+          ritaKloss(buske.x - 21, buske.y + 3, 46, 40, 48, 5, farger[3]);
+          ritaKloss(buske.x + 22, buske.y, 50, 41, 44, 5, farger[3]);
+          ritaKloss(buske.x, buske.y - 7, 70, 45, 45, 5, farger[3]);
+        } else {
+          ritaKloss(buske.x - 9, buske.y - 12, 69, 16, 17, 4, farger[3]);
+        }
+      }
+    }
+    // En figur byggs med delar som följer med när figuren vänder sig.
+    function ritaFigurdel(figur, x, y, hojd, bredd, djup, delensHojd, farg) {
+      const vinkel = figur.vinkel;
+      const platsX = figur.x + x * Math.cos(vinkel) - y * Math.sin(vinkel);
+      const platsY = figur.y + x * Math.sin(vinkel) + y * Math.cos(vinkel);
+      ritaKloss(platsX, platsY, hojd, bredd, djup, delensHojd, farg, vinkel);
+    }
+
+    function ritaAnkan() {
+      // I förstaperson ser du näbben, kroppen och fötterna när du tittar ner.
+      // Huvudet ritas inte, eftersom kameran sitter INUTI det.
+      ritaFigurdel(anka, -1, -8, 5, 14, 8, 5, '#efae37');
+      ritaFigurdel(anka, -1, 8, 5, 14, 8, 5, '#efae37');
+      ritaFigurdel(anka, -4, 0, 18, 34, 26, 22, '#fff3cd');
+      ritaFigurdel(anka, -6, 14, 19, 21, 4, 13, '#ddcfa0');
+      ritaFigurdel(anka, 32, 0, 22, 12, 9, 4, '#ffc247');
+    }
+    function ritaVakten() {
+      let steg = 0;
+      if (spellage === 'spelar') {
+        steg = Math.sin(animationstid * 10) * 6;
+      }
+      ritaPlatta(vakt.x, vakt.y, 1.2, 22, 18, '#64865a');
+      ritaFigurdel(vakt, steg, -7, 11, 10, 9, 22, '#2c433b');
+      ritaFigurdel(vakt, -steg, 7, 11, 10, 9, 22, '#2c433b');
+      ritaFigurdel(vakt, 0, 0, 36, 23, 27, 29, '#426657'); // Jacka.
+      ritaFigurdel(vakt, 0, -18, 34, 9, 8, 25, '#426657');
+      ritaFigurdel(vakt, 0, 18, 34, 9, 8, 25, '#426657');
+      // Samma jaktregel styr både ansiktet och vaktens fart.
+      const jagar = vakt.jaktTidKvar > 0;
+      let ansiktsfarg = '#eab98d';
+      if (jagar) {
+        ansiktsfarg = '#e8a080';
+      }
+      ritaFigurdel(vakt, 0, 0, 61, 20, 20, 22, ansiktsfarg); // Huvud.
+      ritaFigurdel(vakt, 0, 0, 74, 32, 30, 4, '#7e7650');  // Hattbrätte.
+      ritaFigurdel(vakt, 0, 0, 80, 22, 21, 10, '#7e7650'); // Hatt.
+      if (jagar) {
+        // Röda kinder och vita ögon med mörka pupiller.
+        for (const sida of [-1, 1]) {
+          ritaFigurdel(vakt, 10.8, sida * 7, 58, 2, 4, 4, '#d95c4c');
+          ritaFigurdel(vakt, 10.8, sida * 5, 64, 2, 5, 4, '#fff4dd');
+          ritaFigurdel(vakt, 12, sida * 4.5, 63.5, 1, 2.5, 3, '#253029');
+
+          // Tre små klossar bildar ett snett ögonbryn.
+          // Närmast näsan är brynet lägre: det ger en arg blick.
+          for (let bit = 0; bit < 3; bit = bit + 1) {
+            ritaFigurdel(vakt, 11.5, sida * (2 + bit * 2),
+              66.5 + bit, 2, 2.5, 2, '#493b30');
+          }
+        }
+
+        // Sur mun: mitten högre än mungiporna.
+        ritaFigurdel(vakt, 11, 0, 57, 2, 5, 1.5, '#653e34');
+        ritaFigurdel(vakt, 11, -3, 55.8, 2, 2, 2, '#653e34');
+        ritaFigurdel(vakt, 11, 3, 55.8, 2, 2, 2, '#653e34');
+      } else {
+        // Vanligt, lugnt ansikte under promenaden.
+        ritaFigurdel(vakt, 11, -5, 64, 2, 3, 3, '#253c32');
+        ritaFigurdel(vakt, 11, 5, 64, 2, 3, 3, '#253c32');
+        ritaFigurdel(vakt, 11, 0, 55.5, 2, 5, 1.5, '#805a43');
+      }
+
+      let ringfarg = '#7b995c';
+      if (vakt.jaktTidKvar > 0) {
+        ringfarg = '#df8854';
+        ritaKloss(vakt.x, vakt.y, 104, 6, 6, 17, '#ffcf60');
+        ritaKloss(vakt.x, vakt.y, 91, 6, 6, 5, '#ffcf60');
+      }
+      ritaRing(vakt.x, vakt.y, 3, vaktensSynavstand, ringfarg);
+    }
+
+    function ritaMat() {
+      let nummer = 0;
+      for (const matbit of matbitar) {
+        if (!matbit.tagen) {
+          const hojd = 15 + Math.sin(animationstid * 3 + nummer) * 3;
+          ritaPlatta(matbit.x, matbit.y, 2.5, 15, 13, '#e5d395');
+
+          if (nummer % 2 === 0) {
+            // En liten smörgås: bröd, sallad, bröd.
+            ritaKloss(matbit.x, matbit.y, hojd, 23, 20, 5, '#eebc6c');
+            ritaKloss(matbit.x, matbit.y, hojd + 4, 24, 21, 3, '#71a45a');
+            ritaKloss(matbit.x, matbit.y, hojd + 8, 23, 20, 5, '#ffe0a0');
+          } else {
+            // Ett äpple av en röd kloss med ett litet grönt blad.
+            ritaKloss(matbit.x, matbit.y, hojd + 4, 18, 18, 18, '#e97859');
+            ritaKloss(matbit.x + 3, matbit.y, hojd + 15, 10, 5, 3, '#437b46');
+          }
+        }
+        nummer = nummer + 1;
+      }
+    }
+
+    function ritaEffekter() {
+      for (const ring of kvackRingar) {
+        ritaRing(ring.x, ring.y, 4, 20 + ring.alder * 100, '#fff0b4');
+      }
+      for (const effekt of poangEffekter) {
+        ritaKloss(effekt.x, effekt.y, 35 + effekt.alder * 45,
+          8, 8, 8, '#ffdf73', effekt.alder * 4);
+      }
+    }
+
+    // Hjälp att hitta hem när hela parken inte längre syns samtidigt.
+    function uppdateraDammvisare() {
+      if (ankanArIDammen()) {
+        kameraskylt.textContent = 'DU ÄR VID DAMMEN · ESC = PAUS';
+        return;
+      }
+      const vinkelTillDamm = Math.atan2(damm.y - anka.y, damm.x - anka.x);
+      const skillnad = vinkelTillDamm - anka.vinkel;
+      const vinkel = Math.atan2(Math.sin(skillnad), Math.cos(skillnad));
+      let hall = 'framför dig ↑';
+      if (Math.abs(vinkel) > 2.35) {
+        hall = 'bakom dig ↓';
+      } else if (vinkel > 0.45) {
+        hall = 'åt höger →';
+      } else if (vinkel < -0.45) {
+        hall = 'åt vänster ←';
+      }
+      let styrning = 'MUS = TITTA';
+      if (muslage === 'dra') {
+        styrning = 'DRA I BILDEN = TITTA';
+      }
+      kameraskylt.textContent = 'DAMMEN ' + hall + ' · ' + styrning + ' · ESC = PAUS';
+    }
+    function ritaSpelet() {
+      if (!ritprogram || grafikkort.isContextLost()) {
+        return;
+      }
+
+      // Parken är stilla. Återanvänd dess hörn och lägg till figurerna.
+      allaHorn = parkensHorn.slice();
+      ritaBuskar();
+      ritaMat();
+      ritaAnkan();
+      ritaVakten();
+      ritaEffekter();
+
+      grafikkort.viewport(0, 0, spelplan.width, spelplan.height);
+      const himmel = aktuellKarta.himmel;
+      grafikkort.clearColor(himmel[0], himmel[1], himmel[2], 1);
+      grafikkort.clear(grafikkort.COLOR_BUFFER_BIT | grafikkort.DEPTH_BUFFER_BIT);
+      grafikkort.useProgram(ritprogram);
+      grafikkort.uniform3fv(himmelPlats, aktuellKarta.himmel);
+      // Kameran sitter vid ankans huvud och använder samma vinkel som kroppen.
+      const huvudX = anka.x + Math.cos(anka.vinkel) * 12;
+      const huvudY = anka.y + Math.sin(anka.vinkel) * 12;
+      grafikkort.uniform3f(kameraPlats, huvudX, ogonhojd, huvudY);
+      grafikkort.uniform2f(blickPlats, anka.vinkel, blickensLutning);
+      grafikkort.uniform1f(bildformatPlats, spelplan.width / spelplan.height);
+      grafikkort.uniform1f(synfaltPlats, 1 / Math.tan(synfalt * Math.PI / 360));
+      grafikkort.bindBuffer(grafikkort.ARRAY_BUFFER, hornbuffert);
+      grafikkort.bufferData(grafikkort.ARRAY_BUFFER, new Float32Array(allaHorn), grafikkort.DYNAMIC_DRAW);
+      grafikkort.vertexAttribPointer(hornPlats, 3, grafikkort.FLOAT, false, 24, 0);
+      grafikkort.vertexAttribPointer(fargPlats, 3, grafikkort.FLOAT, false, 24, 12);
+      grafikkort.drawArrays(grafikkort.TRIANGLES, 0, allaHorn.length / 6);
+
+      buskfilter.hidden = !ankanArGomd();
+      uppdateraDammvisare();
+      uppdragsskylt.textContent = 'Samla maten och återvänd till den blå dammen.';
+      if (antalMatbitar === matbitar.length) {
+        uppdragsskylt.textContent = 'All mat samlad! Tillbaka till den blå dammen!';
+      } else if (ankanArGomd()) {
+        uppdragsskylt.textContent = 'Du är gömd i busken. Vänta tills vakten går vidare.';
+      } else if (kvackRingar.length > 0) {
+        uppdragsskylt.textContent = 'KVACK! Vakten går mot platsen där du kvackade.';
+      }
+    }
+
+    // ============================================================
+    // 11 B. 3D-MOTORNS TEKNIK — DU KAN HOPPA ÖVER DETTA I BÖRJAN
+    // ============================================================
+    // WebGL behöver två små program för grafikkortet, kallade shaders.
+    // De skrivs i ett annat språk (GLSL). Det första placerar hörnen
+    // i kamerabilden. Det andra ger varje bildpunkt rätt färg.
+    // Inga extra bibliotek eller nedladdningar behövs.
+
+    function skapaShader(typ, kallkod) {
+      const shader = grafikkort.createShader(typ);
+      grafikkort.shaderSource(shader, kallkod);
+      grafikkort.compileShader(shader);
+      if (!grafikkort.getShaderParameter(shader, grafikkort.COMPILE_STATUS)) {
+        throw new Error(grafikkort.getShaderInfoLog(shader));
+      }
+      return shader;
+    }
+
+    function starta3DMotorn() {
+      const hornkod = `
+        attribute vec3 horn;
+        attribute vec3 farg;
+        uniform vec3 kamera;
+        uniform vec2 blick;
+        uniform float bildformat;
+        uniform float synfalt;
+        varying vec3 ytansFarg;
+        varying float avstandFranKameran;
+
+        void main() {
+          // Flytta världen så att kameran är utgångspunkten.
+          vec3 skillnad = horn - kamera;
+          float cosSidled = cos(blick.x);
+          float sinSidled = sin(blick.x);
+          float cosUppat = cos(blick.y);
+          float sinUppat = sin(blick.y);
+
+          // Först vrids bilden i sidled, sedan uppåt/nedåt.
+          float sidled = -skillnad.x * sinSidled + skillnad.z * cosSidled;
+          float framat = skillnad.x * cosSidled + skillnad.z * sinSidled;
+          float uppat = skillnad.y * cosUppat - framat * sinUppat;
+          float djup = skillnad.y * sinUppat + framat * cosUppat;
+
+          // Perspektiv: långt bort blir mindre. WebGL klipper bort det bakom dig.
+          float nara = 0.6;
+          float langt = 2200.0;
+          float djupA = (langt + nara) / (langt - nara);
+          float djupB = -2.0 * langt * nara / (langt - nara);
+          gl_Position = vec4(sidled * synfalt / bildformat,
+                             uppat * synfalt, djupA * djup + djupB, djup);
+          ytansFarg = farg;
+          avstandFranKameran = length(skillnad);
+        }
+      `;
+
+      const fargkod = `
+        precision mediump float;
+        uniform vec3 himmel;
+        varying vec3 ytansFarg;
+        varying float avstandFranKameran;
+        void main() {
+          // Lite dimma gör horisonten mjukare.
+          float dimma = smoothstep(600.0, 2000.0, avstandFranKameran);
+
+          gl_FragColor = vec4(mix(ytansFarg, himmel, dimma), 1.0);
+        }
+      `;
+      const hornshader = skapaShader(grafikkort.VERTEX_SHADER, hornkod);
+      const fargshader = skapaShader(grafikkort.FRAGMENT_SHADER, fargkod);
+      ritprogram = grafikkort.createProgram();
+      grafikkort.attachShader(ritprogram, hornshader);
+      grafikkort.attachShader(ritprogram, fargshader);
+      grafikkort.linkProgram(ritprogram);
+      if (!grafikkort.getProgramParameter(ritprogram, grafikkort.LINK_STATUS)) {
+        throw new Error(grafikkort.getProgramInfoLog(ritprogram));
+      }
+
+      hornPlats = grafikkort.getAttribLocation(ritprogram, 'horn');
+      fargPlats = grafikkort.getAttribLocation(ritprogram, 'farg');
+      kameraPlats = grafikkort.getUniformLocation(ritprogram, 'kamera');
+      blickPlats = grafikkort.getUniformLocation(ritprogram, 'blick');
+      bildformatPlats = grafikkort.getUniformLocation(ritprogram, 'bildformat');
+      synfaltPlats = grafikkort.getUniformLocation(ritprogram, 'synfalt');
+      himmelPlats = grafikkort.getUniformLocation(ritprogram, 'himmel');
+      hornbuffert = grafikkort.createBuffer();
+      grafikkort.enableVertexAttribArray(hornPlats);
+      grafikkort.enableVertexAttribArray(fargPlats);
+      // Djupkontrollen gör att närmaste föremålet syns framför det bakom.
+      grafikkort.enable(grafikkort.DEPTH_TEST);
+      byggOmKartansGrafik();
+    }
+
+    // ============================================================
+    // 12. SPELSLINGAN: UPPDATERA, RITA, UPPREPA
+    // ============================================================
+    function nastaBild(nuvarandeTid) {
+      // Webbläsarens klocka använder millisekunder. / 1000 ger sekunder.
+      let sekunder = (nuvarandeTid - forraBildensTid) / 1000;
+      forraBildensTid = nuvarandeTid;
+
+      // Undvik jättestora hopp om webbläsaren tillfälligt stannar upp.
+      sekunder = Math.min(sekunder, 0.04);
+
+      if (spellage === 'spelar') {
+        animationstid = animationstid + sekunder;
+        uppdateraSpelet(sekunder);
+      }
+
+      ritaSpelet();
+
+      // Be webbläsaren att köra samma funktion inför nästa bild.
+      requestAnimationFrame(nastaBild);
+    }
+
+    // FÖRSTA STARTEN: förbered parken och sätt igång bildvisningen.
+    aterstallSpelet();
+    uppdateraInformation();
+    menytext.textContent = 'Stjäl parkens ' + matbitar.length +
+      ' matbitar och återvänd till dammen inom ' + speltid +
+      ' sekunder. En av fem kartor slumpas varje omgång! Du är ankan! Musen vänder dig. WASD eller pilarna går framåt, bakåt och i sidled. Esc pausar. Klicka på knappen för att fånga musen.';
+    if (grafikkort) {
+      try {
+        starta3DMotorn();
+        requestAnimationFrame(nastaBild);
+      } catch (fel) {
+        menyrubrik.textContent = '3D kunde inte starta';
+        menytext.textContent = 'Prova att ladda om sidan eller öppna spelet i en annan webbläsare.';
+        startknapp.disabled = true;
+        console.error(fel);
+      }
+    } else {
+      menyrubrik.textContent = 'WebGL behövs för 3D';
+      menytext.textContent = 'Öppna spelet i en webbläsare med WebGL aktiverat.';
+      startknapp.disabled = true;
+    }
+
+    spelplan.addEventListener('webglcontextlost', function (handelse) {
+      handelse.preventDefault();
+      pausaOmSpeletPagar();
+      meny.hidden = false;
+      menyrubrik.textContent = '3D-visningen pausades';
+      menytext.textContent = 'Vänta ett ögonblick medan 3D-visningen återställs.';
+      startknapp.disabled = true;
+    });
+
+    spelplan.addEventListener('webglcontextrestored', function () {
+      starta3DMotorn();
+      startknapp.disabled = false;
+      menyrubrik.textContent = '3D-visningen är tillbaka';
+      menytext.textContent = 'Tryck på knappen för att spela vidare.';
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
