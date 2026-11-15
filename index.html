@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spela Ankligan</title>
+  <style>
+    body {
+      background: #101f1c;
+      color: #f7f3df;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 15vh 24px;
+    }
+    a { color: #ffcf60; }
+  </style>
+</head>
+<body>
+  <h1>Ankligan 🦆</h1>
+  <p>Spelet öppnas strax.</p>
+  <p><a href="./ankligan.html">Klicka här för att spela Ankligan</a></p>
+  <script>
+    // GitHub Pages öppnar index.html först.
+    // Skicka spelaren vidare till spelfilen, så att vi bara behöver ändra spelet på ett ställe.
+    window.location.replace('./ankligan.html' + window.location.search + window.location.hash);
+  </script>
+</body>
+</html>
